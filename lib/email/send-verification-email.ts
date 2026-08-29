@@ -13,7 +13,7 @@ export async function sendVerificationEmail(
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL as string,
     to: email,
-    subject: "Sniper Lens Global Networks",
+    subject: "SLGN",
     html: `
       <div style="background-color:#f3f4f1;padding:40px 20px;font-family:Helvetica,Arial,sans-serif;">
         <div style="max-width:480px;margin:0 auto;background-color:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #dee1dc;">
