@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
@@ -15,13 +15,10 @@ export default function VerifyEmailPage() {
 
   const token = searchParams.get("token");
   const email = searchParams.get("email");
+  const missingParams = !token || !email;
 
   useEffect(() => {
-    if (!token || !email) {
-      setStatus("error");
-      setMessage("This verification link is missing details");
-      return;
-    }
+    if (missingParams) return;
 
     fetch("/api/auth/verify-email", {
       method: "POST",
@@ -41,23 +38,16 @@ export default function VerifyEmailPage() {
         setStatus("error");
         setMessage("Something went wrong, please try again");
       });
-  }, [token, email]);
+  }, [token, email, missingParams]);
 
-  async function handleResend() {
-    if (!email) return;
-    setResending(true);
-    await fetch("/api/auth/resend-verification", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    setResending(false);
-    setResent(true);
-  }
+  const effectiveStatus = missingParams ? "error" : status;
+  const effectiveMessage = missingParams
+    ? "This verification link is missing details"
+    : message;
 
   return (
     <section className="mx-auto flex min-h-[calc(100vh-65px)] max-w-md flex-col items-center justify-center px-6 text-center">
-      {status === "loading" ? (
+      {effectiveStatus === "loading" ? (
         <>
           <svg
             className="h-8 w-8 animate-spin text-accent"
@@ -82,7 +72,7 @@ export default function VerifyEmailPage() {
         </>
       ) : null}
 
-      {status === "success" ? (
+      {effectiveStatus === "success" ? (
         <>
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-live/10 text-live">
             <svg
@@ -115,7 +105,7 @@ export default function VerifyEmailPage() {
         </>
       ) : null}
 
-      {status === "error" ? (
+      {effectiveStatus === "error" ? (
         <>
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-alert/10 text-alert">
             <svg
@@ -133,7 +123,7 @@ export default function VerifyEmailPage() {
           <h1 className="mt-4 font-display text-2xl font-semibold">
             Verification failed
           </h1>
-          <p className="mt-2 text-muted">{message}</p>
+          <p className="mt-2 text-muted">{effectiveMessage}</p>
 
           {email ? (
             <button
@@ -152,5 +142,49 @@ export default function VerifyEmailPage() {
         </>
       ) : null}
     </section>
+  );
+
+  async function handleResend() {
+    if (!email) return;
+    setResending(true);
+    await fetch("/api/auth/resend-verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    setResending(false);
+    setResent(true);
+  }
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="mx-auto flex min-h-[calc(100vh-65px)] max-w-md flex-col items-center justify-center px-6 text-center">
+          <svg
+            className="h-8 w-8 animate-spin text-accent"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 0 1 8 -8V0C5.4 0 0 5.4 0 12h4Z"
+            />
+          </svg>
+        </section>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
