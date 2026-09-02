@@ -18,14 +18,18 @@ export default function CheckoutCallbackPage() {
   const [result, setResult] = useState<VerifyResult>({ status: "loading" });
 
   useEffect(() => {
-    if (!reference) {
-      setResult({ status: "failed" });
-      return;
-    }
+    async function verify() {
+      if (!reference) {
+        setResult({ status: "failed" });
+        return;
+      }
 
-    fetch(`/api/checkout/verify?reference=${encodeURIComponent(reference)}`)
-      .then((res) => res.json())
-      .then((data) => {
+      try {
+        const res = await fetch(
+          `/api/checkout/verify?reference=${encodeURIComponent(reference)}`,
+        );
+        const data = await res.json();
+
         if (data.status === "paid") {
           clearCart();
           setResult({
@@ -36,8 +40,12 @@ export default function CheckoutCallbackPage() {
         } else {
           setResult({ status: "failed" });
         }
-      })
-      .catch(() => setResult({ status: "failed" }));
+      } catch {
+        setResult({ status: "failed" });
+      }
+    }
+
+    verify();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reference]);
 
