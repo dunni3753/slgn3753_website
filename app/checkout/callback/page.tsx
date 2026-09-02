@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/components/cart-provider";
@@ -11,7 +11,7 @@ type VerifyResult =
   | { status: "paid"; subtotal: number; reference: string }
   | { status: "failed" };
 
-export default function CheckoutCallbackPage() {
+function CheckoutCallbackContent() {
   const searchParams = useSearchParams();
   const reference = searchParams.get("reference");
   const { clearCart } = useCart();
@@ -94,5 +94,19 @@ export default function CheckoutCallbackPage() {
         Continue shopping
       </Link>
     </section>
+  );
+}
+
+export default function CheckoutCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="mx-auto max-w-xl px-6 py-24 text-center">
+          <p className="text-muted">Confirming your payment...</p>
+        </section>
+      }
+    >
+      <CheckoutCallbackContent />
+    </Suspense>
   );
 }
