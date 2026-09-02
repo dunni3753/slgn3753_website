@@ -1,165 +1,14 @@
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { HeroSlider } from "@/components/hero-slider";
+import Link from "next/link";
 import { QuoteForm } from "@/components/quote-form";
 import { ViewfinderFrame } from "@/components/viewfinder-frame";
-
-import Link from "next/link";
-
-const categories = [
-  {
-    name: "Cameras",
-    slug: "cameras",
-    detail: "PTZ, dome, bullet and analogue",
-    icon: (
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      >
-        <rect x="2.5" y="8" width="12" height="8" rx="2" />
-        <path d="M14.5 10.5l6 -3v9l-6 -3" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    name: "Intercoms",
-    slug: "intercoms",
-    detail: "Audio and video door units",
-    icon: (
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      >
-        <rect x="6" y="2.5" width="12" height="19" rx="2.5" />
-        <circle cx="12" cy="7" r="1.6" />
-        <path d="M9 12h6M9 15.5h4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    name: "Electric Fencing",
-    slug: "electric-fencing",
-    detail: "Perimeter deterrent systems",
-    icon: (
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      >
-        <path
-          d="M4 20V6M10 20V6M16 20V6M4 9h6M4 15h6M10 9h6M10 15h6"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "Fire Alarm Systems",
-    slug: "fire-alarm-systems",
-    detail: "Detection and alert panels",
-    icon: (
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      >
-        <path
-          d="M12 3s4.5 4 4.5 8.5a4.5 4.5 0 1 1 -9 0C7.5 8.5 9 7 9 7s.5 2 1.5 2c0 -2 .5 -4 1.5 -6Z"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "Home Automation",
-    slug: "home-automation",
-    detail: "Lighting, locks and control",
-    icon: (
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      >
-        <path
-          d="M3.5 11.5 12 4l8.5 7.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path d="M6 10v9.5h12V10" strokeLinejoin="round" />
-        <rect x="10" y="14" width="4" height="5.5" />
-      </svg>
-    ),
-  },
-  {
-    name: "Security Gadgets",
-    slug: "security-gadgets",
-    detail: "Sensors, alarms and locks",
-    icon: (
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      >
-        <path
-          d="M12 3.5 19 6.5v5c0 5 -3 8 -7 9 -4 -1 -7 -4 -7 -9v-5Z"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M9.5 12l1.8 1.8L15 10.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-];
-
-const products = [
-  {
-    name: "SL-PTZ 400",
-    category: "PTZ Camera",
-    spec: "4MP, 30x zoom",
-    price: "₦185,000",
-  },
-  {
-    name: "SL-DOME 200",
-    category: "Dome Camera",
-    spec: "2MP, night vision",
-    price: "₦62,000",
-  },
-  {
-    name: "SL-BULLET 250",
-    category: "Bullet Camera",
-    spec: "2MP, 40m IR range",
-    price: "₦58,000",
-  },
-  {
-    name: "SL-INT VIDEO",
-    category: "Video Intercom",
-    spec: "7 inch display",
-    price: "₦94,000",
-  },
-];
+import { HeroSlider } from "@/components/hero-slider";
+import { connectToDatabase } from "@/lib/mongodb";
+import { Category } from "@/lib/models/Category";
+import { Product } from "@/lib/models/Product";
+import { CategoryIcon } from "@/components/category-icon";
+import { formatPrice } from "@/lib/products";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 
 const stats = [
   { value: "500+", label: "Installations completed" },
@@ -168,7 +17,20 @@ const stats = [
   { value: "10 yr", label: "Field equipment warranty" },
 ];
 
-export default function Home() {
+async function getHomeData() {
+  await connectToDatabase();
+
+  const [categories, products] = await Promise.all([
+    Category.find().sort({ createdAt: 1 }).lean(),
+    Product.find({ active: true }).sort({ createdAt: -1 }).limit(4).lean(),
+  ]);
+
+  return { categories, products };
+}
+
+export default async function Home() {
+  const { categories, products } = await getHomeData();
+
   return (
     <>
       <Header />
@@ -224,30 +86,36 @@ export default function Home() {
             Every layer of a secure property
           </h2>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.map((item) => (
-              <Link
-                key={item.slug}
-                href={`/products/${item.slug}`}
-                className="group rounded-2xl border border-line bg-background p-6 transition-colors hover:border-accent"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-line text-accent">
-                  {item.icon}
-                </div>
-                <p className="mt-4 flex items-center justify-between font-display text-lg font-semibold">
-                  {item.name}
-                  <span className="text-muted transition-transform group-hover:translate-x-1 group-hover:text-accent">
-                    →
-                  </span>
-                </p>
-                <p className="mt-1 text-sm text-muted">{item.detail}</p>
-              </Link>
-            ))}
-          </div>
+          {categories.length === 0 ? (
+            <p className="mt-10 text-muted">
+              Categories will appear here once added from the admin panel.
+            </p>
+          ) : (
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {categories.map((item) => (
+                <Link
+                  key={item.slug}
+                  href={`/products/${item.slug}`}
+                  className="group rounded-2xl border border-line bg-background p-6 transition-colors hover:border-accent"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-line text-accent">
+                    <CategoryIcon icon={item.icon} />
+                  </div>
+                  <p className="mt-4 flex items-center justify-between font-display text-lg font-semibold">
+                    {item.name}
+                    <span className="text-muted transition-transform group-hover:translate-x-1 group-hover:text-accent">
+                      →
+                    </span>
+                  </p>
+                  <p className="mt-1 text-sm text-muted">{item.detail}</p>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="py-20">
+      <section id="catalogue" className="py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -258,42 +126,55 @@ export default function Home() {
                 Stocked and ready to install
               </h2>
             </div>
-            <a
-              href="#contact"
+            <Link
+              href="/products"
               className="text-sm font-semibold text-accent hover:opacity-80"
             >
               View full catalogue
-            </a>
+            </Link>
           </div>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {products.map((product) => (
-              <div
-                key={product.name}
-                className="flex flex-col rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-accent"
-              >
-                <div className="aspect-square rounded-xl border border-line bg-background" />
-                <p className="mt-4 font-mono text-xs uppercase tracking-widest text-muted">
-                  {product.category}
-                </p>
-                <p className="mt-1 font-display text-lg font-semibold">
-                  {product.name}
-                </p>
-                <p className="mt-1 text-sm text-muted">{product.spec}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="font-mono text-sm font-semibold">
-                    {product.price}
-                  </span>
-                  <a
-                    href="#contact"
-                    className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold transition-colors hover:border-accent hover:text-accent"
-                  >
-                    View
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
+          {products.length === 0 ? (
+            <p className="mt-10 text-muted">
+              Products will appear here once added from the admin panel.
+            </p>
+          ) : (
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {products.map((product) => (
+                <Link
+                  key={product.slug}
+                  href={`/products/${product.category}/${product.slug}`}
+                  className="flex flex-col rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-accent"
+                >
+                  <div className="aspect-square overflow-hidden rounded-xl border border-line bg-background">
+                    {product.images?.[0] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : null}
+                  </div>
+                  <p className="mt-4 font-mono text-xs uppercase tracking-widest text-muted">
+                    {product.category}
+                  </p>
+                  <p className="mt-1 font-display text-lg font-semibold">
+                    {product.name}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">{product.spec}</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="font-mono text-sm font-semibold">
+                      {formatPrice(product.price)}
+                    </span>
+                    <span className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold transition-colors group-hover:border-accent">
+                      View
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

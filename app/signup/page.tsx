@@ -96,22 +96,39 @@ export default function SignupPage() {
             </p>
 
             <ViewfinderFrame className="mt-10 aspect-[16/10] w-full max-w-sm overflow-hidden rounded-2xl border border-line bg-background">
-              <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-muted/40">
-                <svg
-                  width="56"
-                  height="56"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                >
-                  <circle cx="12" cy="12" r="5" />
-                  <circle cx="12" cy="12" r="9.5" strokeDasharray="1.5 3" />
-                </svg>
-                <span className="font-mono text-[11px] uppercase tracking-widest">
+              <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+                <div className="relative flex h-24 w-24 items-center justify-center">
+                  <span className="radar-ring absolute h-full w-full rounded-full border border-accent/40" />
+                  <span
+                    className="radar-ring absolute h-full w-full rounded-full border border-accent/40"
+                    style={{ animationDelay: "0.9s" }}
+                  />
+                  <span
+                    className="radar-ring absolute h-full w-full rounded-full border border-accent/40"
+                    style={{ animationDelay: "1.8s" }}
+                  />
+                  <span className="relative h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_12px_var(--accent)]" />
+                </div>
+                <span className="font-mono text-[11px] uppercase tracking-widest text-muted/60">
                   New account, sector open
                 </span>
               </div>
+
+              <style jsx>{`
+                .radar-ring {
+                  animation: radar-pulse 2.7s ease-out infinite;
+                }
+                @keyframes radar-pulse {
+                  0% {
+                    transform: scale(0.3);
+                    opacity: 0.8;
+                  }
+                  100% {
+                    transform: scale(1.6);
+                    opacity: 0;
+                  }
+                }
+              `}</style>
             </ViewfinderFrame>
           </div>
 
@@ -323,7 +340,7 @@ export default function SignupPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-60 cursor-pointer"
                 >
                   {loading ? (
                     <>

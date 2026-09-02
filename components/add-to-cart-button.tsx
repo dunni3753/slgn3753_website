@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
-import type { Product } from "@/lib/products";
+import type { CartItem } from "@/components/cart-provider";
 
-export function AddToCartButton({ product }: { product: Product }) {
+type CartProduct = Omit<CartItem, "quantity"> & { stock: number };
+
+export function AddToCartButton({ product }: { product: CartProduct }) {
   const { addItem } = useCart();
-  const [added, setAdded] = useState(false);
+  const router = useRouter();
 
   function handleClick() {
     addItem({
@@ -15,8 +17,7 @@ export function AddToCartButton({ product }: { product: Product }) {
       name: product.name,
       price: product.price,
     });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
+    router.push("/cart");
   }
 
   return (
@@ -24,9 +25,9 @@ export function AddToCartButton({ product }: { product: Product }) {
       type="button"
       onClick={handleClick}
       disabled={product.stock === 0}
-      className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+      className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
     >
-      {added ? "Added to cart" : "Add to Cart"}
+      Add to Cart
     </button>
   );
 }

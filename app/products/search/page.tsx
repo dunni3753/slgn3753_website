@@ -1,41 +1,36 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
 import { connectToDatabase } from "@/lib/mongodb";
-import { Category } from "@/lib/models/Category";
 import { Product } from "@/lib/models/Product";
 import { formatPrice } from "@/lib/format";
+import { ProductSearch } from "@/components/product-search";
 
-export async function generateMetadata({
-  params,
+export default async function SearchPage({
+  searchParams,
 }: {
-  params: Promise<{ category: string }>;
-}): Promise<Metadata> {
-  const { category: categorySlug } = await params;
-  await connectToDatabase();
-  const category = await Category.findOne({ slug: categorySlug }).lean();
-  return { title: category ? category.name : "Products" };
-}
-
-export default async function CategoryPage({
-  params,
-}: {
-  params: Promise<{ category: string }>;
+  searchParams: Promise<{ q?: string }>;
 }) {
-  const { category: categorySlug } = await params;
+  const { q } = await searchParams;
+  const query = q?.trim() ?? "";
 
   await connectToDatabase();
-  const category = await Category.findOne({ slug: categorySlug }).lean();
-  if (!category) notFound();
 
-  const items = await Product.find({ category: categorySlug, active: true })
-    .sort({ createdAt: -1 })
-    .lean();
+  const results = query
+    ? await Product.find({
+        active: true,
+        $or: [
+          { name: { $regex: query, $options: "i" } },
+          { spec: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } },
+        ],
+      }).lean()
+    : [];
+
+  console.log("query", query);
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-16">
       <Link
-        href="/"
+        href="/#catalogue"
         className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-accent"
       >
         <svg
@@ -52,26 +47,28 @@ export default async function CategoryPage({
             strokeLinejoin="round"
           />
         </svg>
-        Back to home
+        Back to catalogue
       </Link>
 
       <p className="mt-6 font-mono text-xs uppercase tracking-widest text-muted">
-        {category.detail}
+        Search results
       </p>
-      <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-        {category.name}
+      <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">
+        {query ? `"${query}"` : "Search products"}
       </h1>
 
-      {items.length === 0 ? (
-        <p className="mt-10 text-muted">
-          No products listed in this category yet.
-        </p>
+      <div className="mt-8 max-w-md">
+        <ProductSearch />
+      </div>
+
+      {query && results.length === 0 ? (
+        <p className="mt-10 text-muted">No products matched your search.</p>
       ) : (
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((product) => (
+          {results.map((product) => (
             <Link
               key={product.slug}
-              href={`/products/${category.slug}/${product.slug}`}
+              href={`/products/${product.category}/${product.slug}`}
               className="flex flex-col rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-accent"
             >
               <div className="aspect-square overflow-hidden rounded-xl border border-line bg-background">

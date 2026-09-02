@@ -129,7 +129,7 @@ export function AvatarUpload({ name, avatarUrl, onAvatarUpdated }: Props) {
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="rounded-full border border-line px-4 py-2 text-sm font-semibold transition-colors hover:border-accent hover:text-accent disabled:opacity-60"
+          className="rounded-full border border-line px-4 py-2 text-sm font-semibold transition-colors hover:border-accent hover:text-accent disabled:opacity-60 cursor-pointer"
         >
           {avatarUrl ? "Change photo" : "Upload photo"}
         </button>

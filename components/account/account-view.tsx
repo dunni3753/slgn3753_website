@@ -6,11 +6,30 @@ import { PasswordStrength } from "@/components/password-strength";
 import { isPasswordStrongEnough } from "@/lib/password";
 import { AvatarUpload } from "./avatar-upload";
 
+type OrderItem = {
+  slug: string;
+  name: string;
+  category: string;
+  price: number;
+  quantity: number;
+  image?: string;
+};
+
+type Order = {
+  _id: string;
+  reference: string;
+  items: OrderItem[];
+  subtotal: number;
+  status: string;
+  createdAt: string;
+};
+
 type Props = {
   name: string;
   email: string;
   avatarUrl: string;
   memberSince: string;
+  orders: Order[];
 };
 
 const tabs = [
@@ -21,7 +40,21 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]["id"];
 
-export function AccountView({ name, email, avatarUrl, memberSince }: Props) {
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
+export function AccountView({
+  name,
+  email,
+  avatarUrl,
+  memberSince,
+  orders,
+}: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("profile");
   const [currentName, setCurrentName] = useState(name);
   const [currentAvatar, setCurrentAvatar] = useState(avatarUrl);
@@ -62,7 +95,7 @@ export function AccountView({ name, email, avatarUrl, memberSince }: Props) {
         <button
           type="button"
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="rounded-full border border-line px-4 py-2 text-sm font-semibold transition-colors hover:border-alert hover:text-alert"
+          className="rounded-full border border-line px-4 py-2 text-sm font-semibold transition-colors hover:border-alert hover:text-alert cursor-pointer"
         >
           Log out
         </button>
@@ -74,13 +107,18 @@ export function AccountView({ name, email, avatarUrl, memberSince }: Props) {
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`relative px-4 py-3 text-sm font-medium transition-colors ${
+            className={`relative px-4 py-3 text-sm font-medium transition-colors cursor-pointer ${
               activeTab === tab.id
                 ? "text-foreground"
                 : "text-muted hover:text-foreground"
             }`}
           >
             {tab.label}
+            {tab.id === "orders" && orders.length > 0 ? (
+              <span className="ml-1.5 rounded-full bg-accent/10 px-1.5 py-0.5 text-xs text-accent">
+                {orders.length}
+              </span>
+            ) : null}
             {activeTab === tab.id ? (
               <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-accent" />
             ) : null}
@@ -98,7 +136,7 @@ export function AccountView({ name, email, avatarUrl, memberSince }: Props) {
             onAvatarUpdated={setCurrentAvatar}
           />
         ) : null}
-        {activeTab === "orders" ? <OrdersTab /> : null}
+        {activeTab === "orders" ? <OrdersTab orders={orders} /> : null}
         {activeTab === "wallet" ? <WalletTab /> : null}
       </div>
     </section>
@@ -201,6 +239,7 @@ function ProfileTab({
           />
         </div>
       </div>
+
       <form
         onSubmit={handleNameSubmit}
         className="rounded-2xl border border-line bg-surface p-6"
@@ -239,7 +278,7 @@ function ProfileTab({
         <button
           type="submit"
           disabled={nameStatus === "loading"}
-          className="mt-5 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="mt-5 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-60 cursor-pointer"
         >
           {nameStatus === "loading"
             ? "Saving..."
@@ -295,7 +334,7 @@ function ProfileTab({
         <button
           type="submit"
           disabled={passwordStatus === "loading"}
-          className="mt-5 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="mt-5 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-60 cursor-pointer"
         >
           {passwordStatus === "loading"
             ? "Updating..."
@@ -308,29 +347,96 @@ function ProfileTab({
   );
 }
 
-function OrdersTab() {
-  return (
-    <div className="rounded-2xl border border-line bg-surface p-10 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-line text-muted">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-        >
-          <path
-            d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2 -1.6L21 8H6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+function OrdersTab({ orders }: { orders: Order[] }) {
+  if (orders.length === 0) {
+    return (
+      <div className="rounded-2xl border border-line bg-surface p-10 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-line text-muted">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          >
+            <path
+              d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2 -1.6L21 8H6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        <p className="mt-4 font-semibold">No orders yet</p>
+        <p className="mt-1 text-sm text-muted">
+          Once you place an order, it will show up here.
+        </p>
       </div>
-      <p className="mt-4 font-semibold">No orders yet</p>
-      <p className="mt-1 text-sm text-muted">
-        Once you place an order, it will show up here.
-      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {orders.map((order) => (
+        <div
+          key={order._id}
+          className="rounded-2xl border border-line bg-surface p-5"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="font-mono text-xs text-muted">
+                {new Date(order.createdAt).toLocaleDateString("en-NG", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+              <p className="mt-0.5 font-mono text-[11px] text-muted">
+                Ref: {order.reference}
+              </p>
+            </div>
+            <span className="rounded-full border border-live/30 bg-live/5 px-2.5 py-1 text-xs font-semibold text-live">
+              Paid
+            </span>
+          </div>
+
+          <div className="mt-4 divide-y divide-line">
+            {order.items.map((item) => (
+              <div
+                key={item.slug}
+                className="flex items-center gap-3 py-2 text-sm"
+              >
+                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-line bg-background">
+                  {item.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : null}
+                </div>
+                <div className="flex flex-1 items-center justify-between">
+                  <span>
+                    {item.name}{" "}
+                    <span className="text-muted">× {item.quantity}</span>
+                  </span>
+                  <span className="font-mono">
+                    {formatPrice(item.price * item.quantity)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 flex items-center justify-between border-t border-line pt-3">
+            <span className="text-sm font-semibold">Total</span>
+            <span className="font-mono text-sm font-semibold">
+              {formatPrice(order.subtotal)}
+            </span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

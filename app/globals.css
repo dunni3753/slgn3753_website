@@ -6,7 +6,7 @@
   --foreground: #14181d;
   --muted: #5b6570;
   --line: #dee1dc;
-  --accent: #fe5c04;
+  --accent: #0090c7;
   --live: #2fb583;
   --alert: #e5484d;
 }
@@ -17,11 +17,10 @@
   --foreground: #ecedee;
   --muted: #96a0aa;
   --line: #262c33;
-  --accent: #ff7429;
+  --accent: #22d3ff;
   --live: #3ed9a0;
   --alert: #f2666b;
 }
-
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);

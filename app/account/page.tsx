@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/mongodb";
 import { User } from "@/lib/models/User";
+import { Order } from "@/lib/models/Order";
 import { AccountView } from "@/components/account/account-view";
 
 export default async function AccountPage() {
@@ -10,7 +11,11 @@ export default async function AccountPage() {
 
   await connectToDatabase();
   const userId = (session.user as { id?: string }).id;
-  const user = await User.findById(userId).lean();
+
+  const [user, orders] = await Promise.all([
+    User.findById(userId).lean(),
+    Order.find({ userId, status: "paid" }).sort({ createdAt: -1 }).lean(),
+  ]);
 
   if (!user) redirect("/login");
 
@@ -20,6 +25,7 @@ export default async function AccountPage() {
       email={user.email}
       avatarUrl={user.avatarUrl ?? ""}
       memberSince={user.createdAt ? user.createdAt.toISOString() : ""}
+      orders={JSON.parse(JSON.stringify(orders))}
     />
   );
 }

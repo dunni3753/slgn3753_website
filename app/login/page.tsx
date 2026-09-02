@@ -90,22 +90,53 @@ export default function LoginPage() {
             </p>
 
             <ViewfinderFrame className="mt-10 aspect-[16/10] w-full max-w-sm overflow-hidden rounded-2xl border border-line bg-background">
-              <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-muted/40">
-                <svg
-                  width="56"
-                  height="56"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                >
-                  <rect x="3" y="6" width="14" height="12" rx="2" />
-                  <path d="M17 10l4 -2.5v9L17 14" strokeLinejoin="round" />
-                </svg>
-                <span className="font-mono text-[11px] uppercase tracking-widest">
+              <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+                <div className="relative flex h-16 w-16 items-center justify-center">
+                  <span className="lock-glow absolute h-full w-full rounded-full bg-accent/20 blur-md" />
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    className="relative text-accent"
+                  >
+                    <rect x="4.5" y="10.5" width="15" height="9.5" rx="2" />
+                    <path
+                      d="M8 10.5V7a4 4 0 0 1 8 0v3.5"
+                      strokeLinecap="round"
+                    />
+                    <circle
+                      cx="12"
+                      cy="15"
+                      r="1.4"
+                      fill="currentColor"
+                      stroke="none"
+                    />
+                  </svg>
+                </div>
+                <span className="font-mono text-[11px] uppercase tracking-widest text-muted/60">
                   Sector secured
                 </span>
               </div>
+
+              <style jsx>{`
+                .lock-glow {
+                  animation: lock-breathe 3s ease-in-out infinite;
+                }
+                @keyframes lock-breathe {
+                  0%,
+                  100% {
+                    opacity: 0.25;
+                    transform: scale(0.9);
+                  }
+                  50% {
+                    opacity: 0.55;
+                    transform: scale(1.05);
+                  }
+                }
+              `}</style>
             </ViewfinderFrame>
           </div>
 
@@ -281,7 +312,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-60 cursor-pointer"
             >
               {loading ? (
                 <>

@@ -119,7 +119,7 @@ export function ThemeToggle() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Change theme"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-foreground transition-colors hover:border-accent hover:text-accent"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-foreground transition-colors hover:border-accent hover:text-accent cursor-pointer"
       >
         {active.icon}
       </button>

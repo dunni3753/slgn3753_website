@@ -1,3 +1,7 @@
+import dns from "node:dns";
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
+console.log("[mongodb] DNS servers set to:", dns.getServers());
+
 import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI;

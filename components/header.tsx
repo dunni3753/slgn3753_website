@@ -1,19 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
 import { useCart } from "./cart-provider";
 
-const links = [
-  { href: "#cameras", label: "Cameras" },
-  { href: "#intercoms", label: "Intercoms" },
-  { href: "#fencing", label: "Electric Fence" },
-  { href: "#fire-alarm", label: "Fire Alarm" },
-  { href: "#automation", label: "Automation" },
-  { href: "#contact", label: "Contact" },
+const productLinks = [
+  {
+    href: "/products/cameras",
+    label: "Cameras",
+    detail: "PTZ, dome, bullet and analogue",
+  },
+  {
+    href: "/products/intercoms",
+    label: "Intercoms",
+    detail: "Video and audio gate units",
+  },
+  {
+    href: "/products/electric-fencing",
+    label: "Electric Fence",
+    detail: "Energizers and fence wire",
+  },
+  {
+    href: "/products/fire-alarm-systems",
+    label: "Fire Alarm",
+    detail: "Panels and smoke detectors",
+  },
+  {
+    href: "/products/home-automation",
+    label: "Automation",
+    detail: "Smart locks and hubs",
+  },
 ];
 
 function CartIcon() {
@@ -107,8 +126,73 @@ function AccountLink() {
   );
 }
 
+function ProductsDropdown() {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex items-center gap-1.5 text-sm font-medium text-muted transition-colors hover:text-foreground cursor-pointer"
+      >
+        Products
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className={`transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <path
+            d="M6 9l6 6 6 -6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      {open ? (
+        <div className="absolute left-1/2 top-10 z-50 w-64 -translate-x-1/2 overflow-hidden rounded-2xl border border-line bg-surface shadow-lg">
+          <div className="divide-y divide-line">
+            {productLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className="block px-4 py-3 transition-colors hover:bg-background"
+              >
+                <p className="text-sm font-semibold">{item.label}</p>
+                <p className="mt-0.5 text-xs text-muted">{item.detail}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function Header() {
   const [open, setOpen] = useState(false);
+  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const { data: session } = useSession();
   const role = (session?.user as { role?: string } | undefined)?.role;
 
@@ -131,15 +215,13 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-7 text-sm font-medium text-muted md:flex">
-          {links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="transition-colors hover:text-foreground"
-            >
-              {link.label}
-            </a>
-          ))}
+          <ProductsDropdown />
+          <a
+            href="#contact"
+            className="transition-colors hover:text-foreground"
+          >
+            Contact
+          </a>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -183,16 +265,55 @@ export function Header() {
 
       {open ? (
         <nav className="flex flex-col gap-1 border-t border-line px-6 py-4 text-sm font-medium text-muted md:hidden">
-          {links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              className="rounded-lg px-2 py-2 transition-colors hover:bg-surface hover:text-foreground"
+          <button
+            type="button"
+            onClick={() => setMobileProductsOpen((v) => !v)}
+            aria-expanded={mobileProductsOpen}
+            className="flex items-center justify-between rounded-lg px-2 py-2 text-left transition-colors hover:bg-surface hover:text-foreground cursor-pointer"
+          >
+            Products
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className={`transition-transform ${mobileProductsOpen ? "rotate-180" : ""}`}
             >
-              {link.label}
-            </a>
-          ))}
+              <path
+                d="M6 9l6 6 6 -6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+
+          {mobileProductsOpen ? (
+            <div className="ml-2 flex flex-col gap-0.5 border-l border-line pl-3">
+              {productLinks.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => {
+                    setMobileProductsOpen(false);
+                    setOpen(false);
+                  }}
+                  className="rounded-lg px-2 py-2 transition-colors hover:bg-surface hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          <a
+            href="#contact"
+            onClick={() => setOpen(false)}
+            className="rounded-lg px-2 py-2 transition-colors hover:bg-surface hover:text-foreground"
+          >
+            Contact
+          </a>
 
           {!session?.user ? (
             <Link

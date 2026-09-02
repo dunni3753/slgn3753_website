@@ -10,6 +10,12 @@ export async function POST(request: NextRequest) {
   try {
     const { name, email, password } = await request.json();
 
+    console.log({
+      "this is name": name,
+      "this is email": email,
+      "this is password": password,
+    });
+
     if (!name || !email || !password) {
       return NextResponse.json(
         { error: "All fields are required" },
@@ -27,9 +33,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log("I AM RIGHT HERE 0");
+
     await connectToDatabase();
 
+    console.log("I AM RIGHT HERE 1");
+
     const existing = await User.findOne({ email: email.toLowerCase() });
+
+    console.log("I AM RIGHT HERE");
     if (existing) {
       return NextResponse.json(
         { error: "An account with this email already exists" },

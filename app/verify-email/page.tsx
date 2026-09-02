@@ -98,7 +98,7 @@ function VerifyEmailContent() {
           </p>
           <Link
             href="/login"
-            className="mt-6 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background"
+            className="mt-6 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-background cursor-pointer"
           >
             Go to Log In
           </Link>
