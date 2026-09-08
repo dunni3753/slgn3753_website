@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 type Slide = {
@@ -32,6 +32,8 @@ const defaultSlides: Slide[] = [
   },
 ];
 
+const TRANSITION_MS = 700;
+
 export function HeroSlider({
   slides = defaultSlides,
   interval = 4500,
@@ -40,21 +42,40 @@ export function HeroSlider({
   interval?: number;
 }) {
   const [index, setIndex] = useState(0);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
+  const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function goTo(next: number) {
+    const wrapped = (next + slides.length) % slides.length;
+    if (wrapped === index) return;
+
+    setPrevIndex(index);
+    setIndex(wrapped);
+
+    if (transitionTimer.current) clearTimeout(transitionTimer.current);
+    transitionTimer.current = setTimeout(() => {
+      setPrevIndex(null);
+    }, TRANSITION_MS);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimer.current) clearTimeout(transitionTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (paused || slides.length <= 1) return;
     const timer = setInterval(() => {
-      setIndex((current) => (current + 1) % slides.length);
+      goTo(index + 1);
     }, interval);
     return () => clearInterval(timer);
-  }, [paused, slides.length, interval]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused, slides.length, interval, index]);
 
   const current = slides[index];
-
-  function goTo(next: number) {
-    setIndex((next + slides.length) % slides.length);
-  }
+  const mountedIndexes = prevIndex !== null ? [prevIndex, index] : [index];
 
   return (
     <div
@@ -71,44 +92,52 @@ export function HeroSlider({
         }}
       />
 
-      {slides.map((slide, slideIndex) => (
-        <div
-          key={slideIndex}
-          className="absolute inset-0 transition-opacity duration-700 ease-in-out"
-          style={{ opacity: slideIndex === index ? 1 : 0 }}
-          aria-hidden={slideIndex !== index}
-        >
-          {slide.src ? (
-            <Image
-              src={slide.src}
-              alt={slide.alt}
-              fill
-              priority={slideIndex === 0}
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/15 via-transparent to-accent/5">
-              <div className="flex flex-col items-center gap-3 text-muted/50">
-                <svg
-                  width="52"
-                  height="52"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                >
-                  <rect x="3" y="6" width="14" height="12" rx="2" />
-                  <path d="M17 10l4 -2.5v9L17 14" strokeLinejoin="round" />
-                </svg>
-                <span className="font-mono text-[11px] uppercase tracking-widest">
-                  Photo goes here
-                </span>
+      {mountedIndexes.map((slideIndex) => {
+        const slide = slides[slideIndex];
+        const isActive = slideIndex === index;
+
+        return (
+          <div
+            key={slideIndex}
+            className="absolute inset-0 transition-opacity ease-in-out"
+            style={{
+              opacity: isActive ? 1 : 0,
+              transitionDuration: `${TRANSITION_MS}ms`,
+            }}
+            aria-hidden={!isActive}
+          >
+            {slide.src ? (
+              <Image
+                src={slide.src}
+                alt={slide.alt}
+                fill
+                priority={slideIndex === 0 && prevIndex === null && index === 0}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/15 via-transparent to-accent/5">
+                <div className="flex flex-col items-center gap-3 text-muted/50">
+                  <svg
+                    width="52"
+                    height="52"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                  >
+                    <rect x="3" y="6" width="14" height="12" rx="2" />
+                    <path d="M17 10l4 -2.5v9L17 14" strokeLinejoin="round" />
+                  </svg>
+                  <span className="font-mono text-[11px] uppercase tracking-widest">
+                    Photo goes here
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      ))}
+            )}
+          </div>
+        );
+      })}
 
       <div className="scanline pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-accent/15 to-transparent" />
 

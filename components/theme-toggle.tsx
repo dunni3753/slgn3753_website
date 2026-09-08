@@ -127,7 +127,7 @@ export function ThemeToggle() {
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 top-11 z-50 w-36 overflow-hidden rounded-xl border border-line bg-surface py-1 shadow-lg"
+          className="absolute right-0 top-11 z-50 w-36 overflow-hidden rounded-xl border border-line bg-surface py-1 shadow-lg cursor-pointer"
         >
           {options.map((option) => {
             const isActive = theme === option.value;
@@ -141,7 +141,7 @@ export function ThemeToggle() {
                   setTheme(option.value);
                   setOpen(false);
                 }}
-                className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors cursor-pointer ${
                   isActive
                     ? "text-accent"
                     : "text-foreground hover:bg-background"

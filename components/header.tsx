@@ -1,6 +1,8 @@
 "use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -190,11 +192,171 @@ function ProductsDropdown() {
   );
 }
 
-export function Header() {
-  const [open, setOpen] = useState(false);
+function MobileMenuSheet({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
   const role = (session?.user as { role?: string } | undefined)?.role;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  function handleClose() {
+    setMobileProductsOpen(false);
+    onClose();
+  }
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={handleClose}
+        aria-hidden="true"
+        className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+          open
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+      />
+
+      {/* Sheet */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        className={`fixed inset-y-0 right-0 z-50 flex w-[85%] max-w-sm flex-col border-l border-line bg-background shadow-2xl transition-transform duration-300 ease-out md:hidden ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-line px-6 py-4">
+          <span className="font-display text-lg font-semibold tracking-tight">
+            Menu
+          </span>
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label="Close menu"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-line cursor-pointer"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            >
+              <path d="M5 5l14 14M19 5L5 19" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-6 py-4 text-sm font-medium text-muted">
+          <button
+            type="button"
+            onClick={() => setMobileProductsOpen((v) => !v)}
+            aria-expanded={mobileProductsOpen}
+            className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-surface hover:text-foreground cursor-pointer"
+          >
+            Products
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className={`transition-transform ${mobileProductsOpen ? "rotate-180" : ""}`}
+            >
+              <path
+                d="M6 9l6 6 6 -6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+
+          {mobileProductsOpen ? (
+            <div className="ml-2 mt-1 flex flex-col gap-0.5 border-l border-line pl-3">
+              {productLinks.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={handleClose}
+                  className="rounded-lg px-2 py-2 transition-colors hover:bg-surface hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          <a
+            href="#contact"
+            onClick={handleClose}
+            className="mt-1 block rounded-lg px-2 py-2.5 transition-colors hover:bg-surface hover:text-foreground"
+          >
+            Contact
+          </a>
+
+          {!session?.user ? (
+            <Link
+              href="/login"
+              onClick={handleClose}
+              className="mt-1 block rounded-lg px-2 py-2.5 transition-colors hover:bg-surface hover:text-foreground"
+            >
+              Log In
+            </Link>
+          ) : null}
+
+          {role === "admin" ? (
+            <Link
+              href="/admin"
+              onClick={handleClose}
+              className="mt-1 block rounded-lg px-2 py-2.5 transition-colors hover:bg-surface hover:text-foreground"
+            >
+              Admin
+            </Link>
+          ) : null}
+        </nav>
+
+        <div className="border-t border-line px-6 py-4">
+          <a
+            href="#contact"
+            onClick={handleClose}
+            className="block w-full rounded-full bg-accent px-4 py-3 text-center text-sm font-semibold text-background"
+          >
+            Get a Quote
+          </a>
+        </div>
+      </div>
+    </>,
+    document.body,
+  );
+}
+
+export function Header() {
+  const [open, setOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-background/90 backdrop-blur">
@@ -240,10 +402,10 @@ export function Header() {
           <ThemeToggle />
           <button
             type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Toggle menu"
+            onClick={() => setOpen(true)}
+            aria-label="Open menu"
             aria-expanded={open}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-line md:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-line md:hidden cursor-pointer"
           >
             <svg
               width="16"
@@ -253,97 +415,13 @@ export function Header() {
               stroke="currentColor"
               strokeWidth="1.8"
             >
-              {open ? (
-                <path d="M5 5l14 14M19 5L5 19" strokeLinecap="round" />
-              ) : (
-                <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-              )}
+              <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
             </svg>
           </button>
         </div>
       </div>
 
-      {open ? (
-        <nav className="flex flex-col gap-1 border-t border-line px-6 py-4 text-sm font-medium text-muted md:hidden">
-          <button
-            type="button"
-            onClick={() => setMobileProductsOpen((v) => !v)}
-            aria-expanded={mobileProductsOpen}
-            className="flex items-center justify-between rounded-lg px-2 py-2 text-left transition-colors hover:bg-surface hover:text-foreground cursor-pointer"
-          >
-            Products
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className={`transition-transform ${mobileProductsOpen ? "rotate-180" : ""}`}
-            >
-              <path
-                d="M6 9l6 6 6 -6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-
-          {mobileProductsOpen ? (
-            <div className="ml-2 flex flex-col gap-0.5 border-l border-line pl-3">
-              {productLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => {
-                    setMobileProductsOpen(false);
-                    setOpen(false);
-                  }}
-                  className="rounded-lg px-2 py-2 transition-colors hover:bg-surface hover:text-foreground"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          ) : null}
-
-          <a
-            href="#contact"
-            onClick={() => setOpen(false)}
-            className="rounded-lg px-2 py-2 transition-colors hover:bg-surface hover:text-foreground"
-          >
-            Contact
-          </a>
-
-          {!session?.user ? (
-            <Link
-              href="/login"
-              onClick={() => setOpen(false)}
-              className="rounded-lg px-2 py-2 transition-colors hover:bg-surface hover:text-foreground"
-            >
-              Log In
-            </Link>
-          ) : null}
-
-          {role === "admin" ? (
-            <Link
-              href="/admin"
-              onClick={() => setOpen(false)}
-              className="rounded-lg px-2 py-2 transition-colors hover:bg-surface hover:text-foreground"
-            >
-              Admin
-            </Link>
-          ) : null}
-
-          <a
-            href="#contact"
-            onClick={() => setOpen(false)}
-            className="mt-2 rounded-full bg-accent px-4 py-2 text-center font-semibold text-background"
-          >
-            Get a Quote
-          </a>
-        </nav>
-      ) : null}
+      <MobileMenuSheet open={open} onClose={() => setOpen(false)} />
     </header>
   );
 }

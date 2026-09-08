@@ -1,13 +1,15 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 
 const navItems = [
   { href: "/admin", label: "Overview" },
-  { href: "/admin/categories", label: "Categories" },
+  { href: "/admin/orders", label: "Orders" },
   { href: "/admin/products", label: "Products" },
+  { href: "/admin/categories", label: "Categories" },
+  { href: "/admin/users", label: "Users" },
 ];
-
 export default async function AdminLayout({
   children,
 }: {
@@ -24,9 +26,17 @@ export default async function AdminLayout({
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <Link
             href="/"
-            className="font-display text-sm font-semibold tracking-tight"
+            className="flex items-center gap-2 font-display text-sm font-semibold tracking-tight"
           >
-            SLGN Admin
+            <Image
+              src="/logo.png"
+              alt="Sniper Lens Global Networks"
+              width={28}
+              height={28}
+              className="h-7 w-7 rounded-full object-contain"
+              priority
+            />
+            SLGN
           </Link>
           <Link
             href="/"
